@@ -121,40 +121,48 @@ def index():
     # Certifique-se que 'estoque' é um campo numérico e a query está correta
     produtos = Produto.query.filter(Produto.estoque > 0).order_by(Produto.nome).all()
     return render_template('index.html', produtos=produtos)
-    
+
+
 @app.route('/admin/pedidos')
 @login_required
 def pedidos():
-    if not current_user.is_admin:  # Verifica se o usuário é administrador
+    # Verifica se o usuário é administrador
+    if not current_user.is_admin:
         flash('Acesso negado. Você não é um administrador.', 'erro')
         return redirect(url_for('index'))
-
-    # Buscar todos os pedidos com informações do usuário e itens
+    
+    # Buscar apenas os pedidos que não estão entregues ou retirados
     pedidos = Pedido.query.options(
         db.joinedload(Pedido.usuario),
         db.joinedload(Pedido.itens).joinedload(ItemPedido.produto)
-    ).order_by(Pedido.data_pedido.desc()).all()
+    ).filter(Pedido.status.notin_(['Entregue', 'Retirado'])) \
+     .order_by(Pedido.data_pedido.desc()) \
+     .all()
     
     return render_template('pedidos.html', pedidos=pedidos)
-
 @app.route('/')
 @login_required
 def index2():
     return render_template('index2.html')
-
 @app.route('/admin/dashboard')
 @login_required
 def admin_dashboard():
-    if not current_user.is_admin:  # Verifica se o usuário é administrador
+    # Verifica se o usuário é administrador
+    if not current_user.is_admin:
         flash('Acesso negado. Você não é um administrador.', 'erro')
         return redirect(url_for('index'))
-
+    
     # Obter estatísticas ou informações relevantes para o dashboard
     total_usuarios = Usuario.query.count()
     total_produtos = Produto.query.count()
     total_pedidos = Pedido.query.count()
-    pedidos_recentes = Pedido.query.order_by(Pedido.data_pedido.desc()).limit(5).all()
-
+    
+    # Filtrar pedidos que não estão entregues ou retirados
+    pedidos_recentes = Pedido.query.filter(Pedido.status.notin_(['Entregue', 'Retirado'])) \
+                                   .order_by(Pedido.data_pedido.desc()) \
+                                   .limit(5000) \
+                                   .all()
+    
     return render_template('admin_dashboard.html', 
                            total_usuarios=total_usuarios, 
                            total_produtos=total_produtos, 
@@ -370,8 +378,7 @@ def atualizar_status(pedido_id, status):
     if pedido:
         pedido.status = status
         db.session.commit()
-        flash('Status atualizado!', 'sucesso')
-    
+            
     return redirect(url_for('admin_dashboard'))
 
 # Rota para o carrinho de compras

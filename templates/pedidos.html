@@ -1,7 +1,5 @@
 {% extends "base.html" %}
-
 {% block content %}
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -41,13 +39,11 @@
                                 <h6><i class="bi bi-person"></i> Cliente:</h6>
                                 <ul class="list-unstyled">
                                     <li>Nome: {{ pedido.usuario.nome }}</li>
-                                    
-                                    <li>Contato: {{ pedido.usuario.celular}}</li>
+                                    <li>Contato: {{ pedido.usuario.celular }}</li>
                                 </ul>
                             </div>
-
-                            <!-- Detalhes do Pedido (com fundo verde) -->
-                            <div class="mb-3 p-3 btn btn-secondary" text-white rounded">
+                            <!-- Detalhes do Pedido -->
+                            <div class="mb-3 p-3 bg-secondary text-white rounded">
                                 <h6><i class="bi bi-receipt"></i> Detalhes:</h6>
                                 <ul class="list-unstyled">
                                     <li>Data Pedido: {{ pedido.data_pedido.strftime('%d/%m/%Y %H:%M') }}</li>
@@ -55,7 +51,6 @@
                                     <li>Data Retirada: {{ pedido.data_retirada.strftime('%d/%m/%Y %H:%M') }}</li>
                                 </ul>
                             </div>
-
                             <!-- Itens do Pedido -->
                             <div class="mb-3">
                                 <h6><i class="bi bi-list-ul"></i> Itens:</h6>
@@ -68,7 +63,6 @@
                                     {% endfor %}
                                 </ul>
                             </div>
-
                             <!-- Total -->
                             <div class="alert alert-success mb-0">
                                 <div class="d-flex justify-content-between">
@@ -82,7 +76,7 @@
                 </div>
                 {% else %}
                 <div class="col-12 text-center py-5">
-                    <h5 class="text-muted">Nenhum pedido encontrado</h5>
+                   <h5 class="text-muted"> Nenhum pedido encontrado e todos entregues!</h5> 
                 </div>
                 {% endfor %}
             </div>
