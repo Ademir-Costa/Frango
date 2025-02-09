@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gráficos de Pedidos</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+
+         <!-- Bootstrap CSS -->
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+        <!-- Bootstrap Icons -->
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.8.1/font/bootstrap-icons.css">
+        <!-- Estilo Personalizado -->
+        <link rel="stylesheet" href="{{ url_for('static', filename='/styles.css') }}">
+    </head>
+</head>
+<body>
+    <div class="container mt-4">
+        <h1 class="text-center">Dashboard de Pedidos</h1>
+        
+        <div class="row mb-4">
+            <div class="col-md-6">
+                <label for="dataInicial">Data Inicial:</label>
+                <input type="datetime-local" id="dataInicial" class="form-control">
+            </div>
+            <div class="col-md-6">
+                <label for="dataFinal">Data Final:</label>
+                <input type="datetime-local" id="dataFinal" class="form-control">
+            </div>
+            <div class="col-md-12 mt-2">
+                <button class="btn btn-primary w-100" onclick="filtrarDados()">Filtrar</button>
+            </div>
+        </div>
+            </div>
+        </div>
+
+        <!-- Card 1: Pedidos por Período -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5>Pedidos por Período:</h5>
+            </div>
+            <div class="card-body">
+                <canvas id="graficoPedidos"></canvas>
+            </div>
+        </div>
+
+        <!-- Card 2: Cidades e Bairros com Pedidos -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5>Cidades e Bairros com Pedidos:</h5>
+            </div>
+            <div class="card-body">
+                <div id="graficoCidadesBairros"></div>
+            </div>
+        </div>
+
+        <!-- Card 3: Usuários com Mais Pedidos -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5>Quem mais faz pedidos:</h5>
+            </div>
+            <div class="card-body">
+                <canvas id="graficoUsuariosPedidos"></canvas>
+            </div>
+        </div>
+
+        <!-- Card 4: Dias e Meses com Mais Pedidos -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5>Dias e Meses com Mais Pedidos:</h5>
+            </div>
+            <div class="card-body">
+                <div id="graficoDiasMeses"></div>
+            </div>
+        </div>
+
+        <!-- Card 5: Entregas vs Retiradas -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5>Entregas vs Retiradas:</h5>
+            </div>
+            <div class="card-body">
+                <canvas id="graficoEntregasRetiradas"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Função para filtrar os dados com base nas datas selecionadas
+        function filtrarDados() {
+            const dataInicial = document.getElementById('dataInicial').value;
+            const dataFinal = document.getElementById('dataFinal').value;
+
+            // Verifica se as datas foram preenchidas
+            if (!dataInicial || !dataFinal) {
+                alert("Por favor, preencha ambas as datas.");
+                return;
+            }
+
+            // Faz uma requisição AJAX para o backend
+            fetch(`/admin/api_graficos?dataInicial=${dataInicial}&dataFinal=${dataFinal}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.error) {
+                        alert(data.error);  // Exibe mensagens de erro
+                    } else {
+                        atualizarGraficos(data);  // Atualiza os gráficos com os dados recebidos
+                    }
+                })
+                .catch(error => {
+                    console.error("Erro ao buscar dados:", error);
+                    alert("Erro ao buscar dados. Verifique o console para mais detalhes.");
+                });
+        }
+
+        // Função para atualizar os gráficos com os dados recebidos
+        function atualizarGraficos(dados) {
+            // Card 1: Gráfico de Pedidos por Período
+            const ctx1 = document.getElementById('graficoPedidos').getContext('2d');
+            new Chart(ctx1, {
+                type: 'line',
+                data: {
+                    labels: dados.pedidos.map(p => p.data_pedido),
+                    datasets: [{
+                        label: 'Quantidade de Pedidos',
+                        data: dados.pedidos.map(p => p.quantidade),
+                        borderColor: 'rgba(75, 192, 192, 1)',
+                        fill: false,
+                    }, {
+                        label: 'Valor Total',
+                        data: dados.pedidos.map(p => p.total),
+                        borderColor: 'rgba(153, 102, 255, 1)',
+                        fill: false,
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+
+            // Card 2: Gráfico de Cidades e Bairros
+            const cidadesBairrosData = dados.cidadesBairros.map(c => `${c.cidade} - ${c.bairro}`);
+            const cidadesBairrosPedidos = dados.cidadesBairros.map(c => c.pedidos);
+            const trace = {
+                x: cidadesBairrosData,
+                y: cidadesBairrosPedidos,
+                type: 'bar'
+            };
+            Plotly.newPlot('graficoCidadesBairros', [trace]);
+
+            // Card 3: Gráfico de Usuários com Mais Pedidos
+            const ctx3 = document.getElementById('graficoUsuariosPedidos').getContext('2d');
+            new Chart(ctx3, {
+                type: 'bar',
+                data: {
+                    labels: dados.usuariosPedidos.map(u => u.nome),
+                    datasets: [{
+                        label: 'Pedidos',
+                        data: dados.usuariosPedidos.map(u => u.pedidos),
+                        backgroundColor: 'rgba(255, 99, 132, 0.2)',
+                        borderColor: 'rgba(255, 99, 132, 1)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+
+            // Card 4: Gráfico de Dias e Meses com Mais Pedidos
+            const diasMesesData = dados.diasMeses.map(d => d.dia);
+            const diasMesesPedidos = dados.diasMeses.map(d => d.pedidos);
+            const trace2 = {
+                x: diasMesesData,
+                y: diasMesesPedidos,
+                type: 'bar'
+            };
+            Plotly.newPlot('graficoDiasMeses', [trace2]);
+
+            // Card 5: Gráfico de Entregas vs Retiradas
+            const ctx5 = document.getElementById('graficoEntregasRetiradas').getContext('2d');
+            new Chart(ctx5, {
+                type: 'pie',
+                data: {
+                    labels: ['Entregar', 'Retiradas'],
+                    datasets: [{
+                        data: [dados.entregasRetiradas.entregas, dados.entregasRetiradas.retiradas],
+                        backgroundColor: ['rgba(54, 162, 235, 0.2)', 'rgba(255, 206, 86, 0.2)'],
+                        borderColor: ['rgba(54, 162, 235, 1)', 'rgba(255, 206, 86, 1)'],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                }
+            });
+        }
+    </script>
+</body>
+</html>

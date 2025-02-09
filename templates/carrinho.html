@@ -1,0 +1,167 @@
+{% extends "base.html" %}
+{% block content %}
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.8.1/font/bootstrap-icons.css">
+    <!-- Estilo Personalizado -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='/styles.css') }}">
+</head>
+<div class="container">
+    <div class="card shadow-lg">
+        <div class="card-header bg-primary text-white">
+            <h4 class="mb-0"><i class="bi bi-cart4"></i> Seu Carrinho</h4>
+        </div>
+        
+        <div class="card-body">
+            <form method="POST" id="form-pedido" onsubmit="return validarCarrinho()">
+                <!-- Listagem de Produtos DEVE estar dentro do formulário -->
+                <div class="row g-4 mb-4" id="produtos-container">
+                 
+                    {% for produto in produtos %}
+                    <div class="col-md-4">
+                        <div class="card h-100">
+                            <div class="card-body">
+                                <h5 class="card-title">{{ produto.nome }}</h5>
+                                {% if produto.descricao %}
+                                <p class="card-text text-muted">{{ produto.descricao }}</p>
+                                
+                                {% endif %}
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <span class="h5 text-success">R$ {{ "%.2f"|format(produto.preco) }}</span>
+                                    <div class="input-group" style="width: 120px;">
+                                        <input type="number" 
+                                            class="form-control produto-quantidade" 
+                                            name="produto_{{ produto.id }}"  
+                                            data-produto-id="{{ produto.id }}" 
+                                            data-produto-preco="{{ produto.preco }}" 
+                                            data-produto-estoque="{{ produto.estoque }}"
+                                            min="0" 
+                                            max="{{ produto.estoque }}"
+                                            value="0"
+                                            required> 
+                                    </div>
+                                </div>
+                                <small class="text-white d-block mt-2 fw-bold" style="background-color: #28a745; padding: 5px; border-radius: 5px;">
+                                    Estoque: {{ produto.estoque }} unidade(s)
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+                    {% else %}
+                    <div class="col-12 text-center py-5">
+                        <h5 class="text-muted">Nenhum produto disponível no momento.</h5>
+                    </div>
+                    {% endfor %}
+                </div>
+                
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label">Local de Retirada*</label>
+                        <select class="form-select" name="local_retirada" id="local-retirada" required>
+                            <option value="" disabled selected>Selecione...</option>
+                            <option value="Entregar no Endereço">Entrega no Endereço (Taxa R$ 10,00)</option>
+                            <option value="Retirar na Frangolandia">Frangolandia do Salim (Sem Taxa)</option>
+                        </select>
+                    </div>
+                    
+                    <div class="col-md-6">
+                        <label class="form-label">Data/Horário de Retirada*</label>
+                        <input type="datetime-local" 
+                               class="form-control" 
+                               name="data_retirada" 
+                               id="data-retirada"
+                               min="{{ min_date }}"
+                               required>
+                    </div>
+                </div>
+                <!-- Resumo do Pedido -->
+                <div class="card mt-4 bg-light">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h5 class="mb-0">Resumo do Pedido</h5>
+                            <h4 class="mb-0 text-primary" id="total-pedido">R$ 0,00</h4>
+                        </div>
+                        <ul class="list-group list-group-flush" id="resumo-itens">
+                            <li class="list-group-item text-muted">Nenhum item selecionado</li>
+                        </ul>
+                        <div class="mt-3">
+                            <div class="d-flex justify-content-between">
+                                <span>Taxa de Entrega:</span>
+                                <span id="taxa-entrega">R$ 10,00</span>
+                            </div>
+                        </div>
+                        <img src="./static/imagens/frango_assado.png" alt="frango assado" style="width:15%;height:15%;">
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-success btn-lg w-100 mt-4">
+                    <i class="bi bi-check-circle"></i> Confirmar Pedido
+                </button>
+            </form> 
+        </div>
+    </div>
+</div>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const inputsQuantidade = document.querySelectorAll('.produto-quantidade');
+    const resumoItens = document.getElementById('resumo-itens');
+    const totalPedido = document.getElementById('total-pedido');
+    const taxaEntrega = document.getElementById('taxa-entrega');
+    const localRetirada = document.getElementById('local-retirada');
+
+    // Função para calcular o total do pedido
+    function calcularTotal() {
+        let total = 0;
+        resumoItens.innerHTML = ''; // Limpa o resumo
+
+        inputsQuantidade.forEach(input => {
+            const quantidade = parseInt(input.value);
+            const preco = parseFloat(input.dataset.produtoPreco);
+            const nome = input.closest('.card-body').querySelector('.card-title').textContent;
+
+            if (quantidade > 0) {
+                const subtotal = quantidade * preco;
+                total += subtotal;
+
+                // Adiciona o item ao resumo
+                const listItem = document.createElement('li');
+                listItem.className = 'list-group-item';
+                listItem.textContent = `${quantidade}x ${nome} + R$ ${subtotal.toFixed(2)}`;
+                resumoItens.appendChild(listItem);
+            }
+        });
+
+        // Calcula a taxa de entrega
+        const taxa = localRetirada.value === 'Entregar no Endereço' ? 10 : 0;
+        total += taxa;
+
+        // Atualiza o total do pedido e a taxa de entrega
+        totalPedido.textContent = `R$ ${total.toFixed(2)}`;
+        taxaEntrega.textContent = `R$ ${taxa.toFixed(2)}`;
+
+        // Se nenhum item estiver selecionado, mostra mensagem padrão
+        if (resumoItens.children.length === 0) {
+            const listItem = document.createElement('li');
+            listItem.className = 'list-group-item text-muted';
+            listItem.textContent = 'Nenhum item selecionado';
+            resumoItens.appendChild(listItem);
+        }
+    }
+
+    // Event listeners para atualizar o total quando a quantidade ou local de retirada mudar
+    inputsQuantidade.forEach(input => {
+        input.addEventListener('input', calcularTotal);
+    });
+
+    localRetirada.addEventListener('change', calcularTotal);
+
+    // Inicializa o cálculo ao carregar a página
+    calcularTotal();
+});
+</script>
+{% endblock %}
