@@ -20,6 +20,12 @@
     <div class="card-body">
         <a href="{{ url_for('carrinho') }}" class="btn btn-success btn-lg">Fazer Pedido</a>
         <a href="{{ url_for('acompanhamento') }}" class="btn btn-info btn-lg">Acompanhar Pedido</a>
+        <li>
+            <a class="nav-link {% if request.endpoint == 'admin_dashboard' %}active{% endif %}" href="{{ url_for('admin_dashboard') }}">
+                <i class="bi bi-clock-history"></i> Admin Dashboard
+            </a>
+        </li>
+
     </div>
 </div>
 {% endblock %}

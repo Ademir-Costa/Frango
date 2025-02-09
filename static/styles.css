@@ -330,3 +330,48 @@ table img {
     object-fit: cover;
     border-radius: 5px;
 }
+/* Estilo Geral para Botões */
+.btn-sm {
+    font-size: 0.8rem; /* Tamanho da fonte menor para botões pequenos */
+    padding: 0.375rem 0.75rem; /* Espaçamento interno ajustado */
+    display: flex; /* Alinha ícone e texto horizontalmente */
+    align-items: center; /* Centraliza verticalmente */
+    gap: 0.25rem; /* Espaço entre o ícone e o texto */
+}
+
+/* Estilo Específico para Cada Tipo de Botão */
+.btn-primary {
+    background-color: #0d6efd; /* Azul Bootstrap */
+    border-color: #0d6efd;
+}
+
+.btn-danger {
+    background-color: #dc3545; /* Vermelho Bootstrap */
+    border-color: #dc3545;
+}
+
+.btn-warning {
+    background-color: #ffc107; /* Amarelo Bootstrap */
+    border-color: #ffc107;
+    color: #000; /* Texto preto para melhor contraste */
+}
+
+.btn-info {
+    background-color: #0dcaf0; /* Azul claro Bootstrap */
+    border-color: #0dcaf0;
+}
+
+/* Estilo para Ícones */
+.bi {
+    font-size: 1rem; /* Tamanho padrão dos ícones */
+}
+
+/* Estilo para o Grupo de Botões */
+.d-flex.gap-2 {
+    gap: 0.5rem; /* Espaçamento entre os botões */
+}
+
+/* Estilo para Formulário Inline */
+form[style*="display:inline;"] {
+    display: inline-flex; /* Garante que o formulário se comporte como um botão inline */
+}

@@ -41,28 +41,44 @@
                     </td>
                     <td>
                         <div class="d-flex gap-2">
+                            <!-- Botão para Editar -->
+                            <a href="{{ url_for('editar_usuario', user_id=usuario.id) }}" 
+                               class="btn btn-sm btn-primary" 
+                               title="Editar Usuário">
+                                <i class="bi bi-pencil-square">Editar Usuario</i>
+                            </a>
+
+                            <!-- Botão para Excluir -->
+                            <form method="POST" action="{{ url_for('excluir_usuario', user_id=usuario.id) }}" style="display:inline;">
+                                <button type="submit" class="btn btn-sm btn-danger" 
+                                        onclick="return confirm('Tem certeza que deseja excluir este usuário?');" 
+                                        title="Excluir Usuário">
+                                    <i class="bi bi-trash">Excluir</i>
+                                </button>
+                            </form>
+
                             <!-- Botão para Tornar Admin -->
                             <a href="{{ url_for('tornar_admin', user_id=usuario.id) }}" 
                                class="btn btn-sm btn-warning" 
                                title="Tornar Admin">
-                                <i class="bi bi-person-gear"></i>
+                                <i class="bi bi-person-gear">Tornar Admin</i>
                             </a>
-                            
+
                             <!-- Botão para Remover Admin (Duplo Clique) -->
                             {% if usuario.is_admin %}
                             <button class="btn btn-sm btn-danger remover-admin-btn"
                                     data-user-id="{{ usuario.id }}"
                                     title="Clique duas vezes para remover admin">
-                                <i class="bi bi-person-dash"></i>
+                                <i class="bi bi-person-dash">Remover Admin</i>
                             </button>
                             {% endif %}
-                            
+
                             <!-- Botão para Ver Detalhes -->
                             <button class="btn btn-sm btn-info" 
                                     data-bs-toggle="modal" 
                                     data-bs-target="#detalhesUsuario{{ usuario.id }}"
                                     title="Ver Detalhes">
-                                <i class="bi bi-eye"></i>
+                                <i class="bi bi-eye">Detalhaes do Usuário</i>
                             </button>
                         </div>
                     </td>
@@ -79,7 +95,13 @@
                             <div class="modal-body">
                                 <dl class="row">
                                     <dt class="col-sm-4">Data de Registro:</dt>
-                                    <dd class="col-sm-8">{{ usuario.data_registro.strftime('%d/%m/%Y %H:%M') }}</dd>
+                                    <dd class="col-sm-8">
+                                        {% if usuario.data_registro %}
+                                            {{ usuario.data_registro.strftime('%d/%m/%Y %H:%M') }}
+                                        {% else %}
+                                            N/A
+                                        {% endif %}
+                                    </dd>
                                     
                                     <dt class="col-sm-4">Endereço:</dt>
                                     <dd class="col-sm-8">

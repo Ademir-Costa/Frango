@@ -17,6 +17,8 @@ class Usuario(db.Model, UserMixin):
     estado = db.Column(db.String(2), nullable=False)
     is_admin = db.Column(db.Boolean, default=False)  # Campo obrigatório
     data_registro = db.Column(db.DateTime, default=datetime.utcnow)  # Data de registro
+    ultimo_pedido = db.Column(db.DateTime)  # Data do último pedido
+    itens_pedidos = db.Column(db.String(255))  # Itens pedidos (pode ser ajustado para um relacionamento com outra tabela)
    
     def definir_senha(self, senha):
         self.senha_hash = generate_password_hash(senha)

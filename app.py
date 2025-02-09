@@ -16,6 +16,8 @@ from flask_login import LoginManager
 from flask_login import UserMixin
 
 
+
+
 # Carregar variáveis de ambiente
 load_dotenv()
 
@@ -71,6 +73,9 @@ class Usuario(db.Model, UserMixin):
     is_admin = db.Column(db.Boolean, default=False)  # Campo obrigatório
     data_registro = db.Column(db.DateTime, default=datetime.utcnow)  # Data de registro
     # Métodos para gerenciamento de senha
+    ultimo_pedido = db.Column(db.DateTime)  # Data do último pedido
+    itens_pedidos = db.Column(db.String(255))  # Itens pedidos (pode ser ajustado para um relacionamento com outra tabela)
+    
     def definir_senha(self, senha):
         self.senha_hash = generate_password_hash(senha)
 
@@ -180,8 +185,6 @@ def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 
-
-
 @app.route('/')
 @login_required
 def index2():
@@ -276,6 +279,51 @@ def cadastro():
     # Passa o número de usuários cadastrados para o template
     total_usuarios = Usuario.query.count()
     return render_template('cadastro.html', total_usuarios=total_usuarios)
+
+@app.route('/editar_usuario/<int:user_id>', methods=['GET', 'POST'])
+@login_required
+def editar_usuario(user_id):
+    if not current_user.is_admin:
+        flash('Acesso negado. Você não é um administrador.', 'erro')
+        return redirect(url_for('index'))
+
+    usuario = Usuario.query.get_or_404(user_id)
+
+    if request.method == 'POST':
+        # Atualiza os campos do usuário com base nos dados do formulário
+        usuario.nome = request.form.get('nome')
+        usuario.email = request.form.get('email')
+        usuario.celular = request.form.get('celular')
+        usuario.cep = request.form.get('cep')
+        usuario.logradouro = request.form.get('logradouro')
+        usuario.numero = request.form.get('numero')
+        usuario.complemento = request.form.get('complemento')
+        usuario.bairro = request.form.get('bairro')
+        usuario.cidade = request.form.get('cidade')
+        usuario.estado = request.form.get('estado')
+
+        # Salva as alterações no banco de dados
+        db.session.commit()
+        flash(f'Dados do usuário {usuario.nome} atualizados com sucesso!', 'sucesso')
+        return redirect(url_for('admin_usuarios'))
+
+    return render_template('editar_usuario.html', usuario=usuario)
+
+@app.route('/excluir_usuario/<int:user_id>', methods=['POST'])
+@login_required
+def excluir_usuario(user_id):
+    if not current_user.is_admin:
+        flash('Acesso negado. Você não é um administrador.', 'erro')
+        return redirect(url_for('index'))
+
+    usuario = Usuario.query.get_or_404(user_id)
+
+    # Remove o usuário do banco de dados
+    db.session.delete(usuario)
+    db.session.commit()
+
+    flash(f'Usuário {usuario.nome} excluído com sucesso!', 'sucesso')
+    return redirect(url_for('admin_usuarios'))
 
 @app.route('/cadastro_admin', methods=['GET', 'POST'])
 def cadastro_admin():
@@ -779,6 +827,30 @@ def admin_usuarios():
     
     usuarios = Usuario.query.all()  # Recupera todos os usuários
     return render_template('admin_usuarios.html', usuarios=usuarios)
+
+
+
+@app.route('/admin/detalhes_usuario/<int:user_id>')
+@login_required
+def detalhes_usuario(user_id):
+    if not current_user.is_admin:
+        flash('Acesso negado. Você não é um administrador.', 'erro')
+        return redirect(url_for('index'))
+
+    # Recupera o usuário pelo ID
+    usuario = Usuario.query.get_or_404(user_id)
+
+    # Calcula a diferença de dias desde o último pedido
+    if usuario.ultimo_pedido:
+        diferenca = datetime.utcnow() - usuario.ultimo_pedido
+        dias_sem_pedido = diferenca.days
+    else:
+        dias_sem_pedido = None
+
+    # Passa os dados para o template
+    return render_template('detalhes_usuario.html',
+                           usuario=usuario,
+                           dias_sem_pedido=dias_sem_pedido)
 
 
 # Cria o banco de dados e as tabelas
