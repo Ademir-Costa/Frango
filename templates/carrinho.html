@@ -1,10 +1,8 @@
 {% extends "base.html" %}
 {% block content %}
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
     <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <!-- Bootstrap Icons -->
@@ -26,11 +24,21 @@
                     {% for produto in produtos %}
                     <div class="col-md-4">
                         <div class="card h-100">
+                            <!-- Foto do Produto -->
+                            <div class="text-center">
+                                {% if produto.foto %}
+                                <img src="{{ url_for('static', filename=produto.foto) }}" 
+                                     alt="{{ produto.nome }}" 
+                                     class="img-fluid rounded-top" 
+                                     style="max-height: 150px; object-fit: cover;">
+                                {% else %}
+                                <span class="text-muted">Sem Imagem</span>
+                                {% endif %}
+                            </div>
                             <div class="card-body">
                                 <h5 class="card-title">{{ produto.nome }}</h5>
                                 {% if produto.descricao %}
                                 <p class="card-text text-muted">{{ produto.descricao }}</p>
-                                
                                 {% endif %}
                                 <div class="d-flex justify-content-between align-items-center">
                                     <span class="h5 text-success">R$ {{ "%.2f"|format(produto.preco) }}</span>
@@ -96,9 +104,7 @@
                                 <span id="taxa-entrega">R$ 10,00</span>
                             </div>
                         </div>
-                        <img src="./static/imagens/frango_assado.png" alt="frango assado" style="width:15%;height:15%;">
-                    </div>
-                </div>
+                                      
                 <button type="submit" class="btn btn-success btn-lg w-100 mt-4">
                     <i class="bi bi-check-circle"></i> Confirmar Pedido
                 </button>
@@ -113,21 +119,17 @@ document.addEventListener('DOMContentLoaded', function () {
     const totalPedido = document.getElementById('total-pedido');
     const taxaEntrega = document.getElementById('taxa-entrega');
     const localRetirada = document.getElementById('local-retirada');
-
     // Função para calcular o total do pedido
     function calcularTotal() {
         let total = 0;
         resumoItens.innerHTML = ''; // Limpa o resumo
-
         inputsQuantidade.forEach(input => {
             const quantidade = parseInt(input.value);
             const preco = parseFloat(input.dataset.produtoPreco);
             const nome = input.closest('.card-body').querySelector('.card-title').textContent;
-
             if (quantidade > 0) {
                 const subtotal = quantidade * preco;
                 total += subtotal;
-
                 // Adiciona o item ao resumo
                 const listItem = document.createElement('li');
                 listItem.className = 'list-group-item';
@@ -135,15 +137,12 @@ document.addEventListener('DOMContentLoaded', function () {
                 resumoItens.appendChild(listItem);
             }
         });
-
         // Calcula a taxa de entrega
         const taxa = localRetirada.value === 'Entregar no Endereço' ? 10 : 0;
         total += taxa;
-
         // Atualiza o total do pedido e a taxa de entrega
         totalPedido.textContent = `R$ ${total.toFixed(2)}`;
         taxaEntrega.textContent = `R$ ${taxa.toFixed(2)}`;
-
         // Se nenhum item estiver selecionado, mostra mensagem padrão
         if (resumoItens.children.length === 0) {
             const listItem = document.createElement('li');
@@ -152,14 +151,11 @@ document.addEventListener('DOMContentLoaded', function () {
             resumoItens.appendChild(listItem);
         }
     }
-
     // Event listeners para atualizar o total quando a quantidade ou local de retirada mudar
     inputsQuantidade.forEach(input => {
         input.addEventListener('input', calcularTotal);
     });
-
     localRetirada.addEventListener('change', calcularTotal);
-
     // Inicializa o cálculo ao carregar a página
     calcularTotal();
 });

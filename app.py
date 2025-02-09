@@ -12,12 +12,8 @@ from flask import jsonify, request
 from flask_sqlalchemy import SQLAlchemy
 from flask import request, jsonify
 from sqlalchemy import func
-
-#from app import db  # Importação absoluta
-
-# Importação absoluta
-#from models import Pedido, Usuario, ItemPedido
-
+from flask_login import LoginManager
+from flask_login import UserMixin
 
 
 # Carregar variáveis de ambiente
@@ -40,8 +36,11 @@ app.config['MAIL_DEFAULT_SENDER'] = os.getenv('MAIL_USERNAME')
 
 db = SQLAlchemy(app)
 mail = Mail(app)
-login_manager = LoginManager(app)
-login_manager.login_view = 'login'
+
+# Configuração do Flask-Login
+login_manager = LoginManager()
+login_manager.init_app(app)
+login_manager.login_view = 'login'  # Rota para redirecionar usuários não autenticados
 
 # Serializador para gerar tokens
 serializer = URLSafeTimedSerializer(app.config['SECRET_KEY'])
@@ -50,26 +49,28 @@ serializer = URLSafeTimedSerializer(app.config['SECRET_KEY'])
 def load_user(user_id):
     return Usuario.query.get(int(user_id))
 
+
 # Modelo de Usuário
+
+
+from datetime import datetime
+
 class Usuario(db.Model, UserMixin):
     id = db.Column(db.Integer, primary_key=True)
-    celular = db.Column(db.String(15), unique=True, nullable=False)
-    nome = db.Column(db.String(100), nullable=True)
+    nome = db.Column(db.String(100), nullable=False)
     email = db.Column(db.String(100), unique=True, nullable=False)
-    senha_hash = db.Column(db.String(200), nullable=False)
-    reset_token = db.Column(db.String(200), nullable=True)
-    token_expira = db.Column(db.DateTime, nullable=True)
-    data_registro = db.Column(db.DateTime, default=datetime.utcnow)
-    is_admin = db.Column(db.Boolean, default=False)  # Nova coluna para administrador
-    # Campos de endereço
-    cep = db.Column(db.String(10), nullable=True)
-    logradouro = db.Column(db.String(200), nullable=True)
-    numero = db.Column(db.String(10), nullable=True)
-    complemento = db.Column(db.String(100), nullable=True)
-    bairro = db.Column(db.String(100), nullable=True)
-    cidade = db.Column(db.String(100), nullable=True)
-    estado = db.Column(db.String(2), nullable=True)
-
+    celular = db.Column(db.String(20), unique=True, nullable=False)
+    senha_hash = db.Column(db.String(255), nullable=False)
+    cep = db.Column(db.String(10), nullable=False)
+    logradouro = db.Column(db.String(255), nullable=False)
+    numero = db.Column(db.String(20), nullable=False)
+    complemento = db.Column(db.String(100))
+    bairro = db.Column(db.String(100), nullable=False)
+    cidade = db.Column(db.String(100), nullable=False)
+    estado = db.Column(db.String(2), nullable=False)
+    is_admin = db.Column(db.Boolean, default=False)  # Campo obrigatório
+    data_registro = db.Column(db.DateTime, default=datetime.utcnow)  # Data de registro
+    # Métodos para gerenciamento de senha
     def definir_senha(self, senha):
         self.senha_hash = generate_password_hash(senha)
 
@@ -105,13 +106,15 @@ class ItemPedido(db.Model):
     produto = db.relationship('Produto', backref='itens_pedido', lazy='joined')
     
     
-    
+
 class Produto(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     nome = db.Column(db.String(100), nullable=False)
-    descricao = db.Column(db.String(200), nullable=True)
+    descricao = db.Column(db.Text, nullable=True)
     preco = db.Column(db.Float, nullable=False)
     estoque = db.Column(db.Integer, nullable=False)
+    data_atualizacao = db.Column(db.DateTime, nullable=True, default=datetime.utcnow)
+    foto = db.Column(db.String(255), nullable=True)  # Adicione esta linha
 
 # Rotas da interface web
 
@@ -140,10 +143,51 @@ def pedidos():
      .all()
     
     return render_template('pedidos.html', pedidos=pedidos)
+
+@app.route('/admin/produtos/atualizar/<int:produto_id>', methods=['POST'])
+@login_required
+def atualizar_produto(produto_id):
+    if not current_user.is_admin:  # Verifica se o usuário é administrador
+        flash('Acesso negado. Você não é um administrador.', 'erro')
+        return redirect(url_for('index'))
+
+    produto = Produto.query.get_or_404(produto_id)  # Busca o produto pelo ID
+
+    try:
+        # Atualiza os campos do produto com base nos dados do formulário
+        produto.preco = float(request.form.get('preco'))
+        produto.estoque = int(request.form.get('estoque'))
+        produto.data_atualizacao = datetime.utcnow()  # Adiciona a data de atualização
+        db.session.commit()
+        flash('Produto atualizado com sucesso!', 'sucesso')
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Erro ao atualizar o produto: {str(e)}', 'erro')
+
+    return redirect(url_for('admin_produtos'))
+
+
+from werkzeug.utils import secure_filename
+
+# Configuração para uploads
+UPLOAD_FOLDER = 'static/uploads'
+ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
+
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # Limite de 16MB
+
+def allowed_file(filename):
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
+
+
+
 @app.route('/')
 @login_required
 def index2():
     return render_template('index2.html')
+
+
 @app.route('/admin/dashboard')
 @login_required
 def admin_dashboard():
@@ -172,8 +216,10 @@ def admin_dashboard():
 @app.route('/cadastro', methods=['GET', 'POST'])
 def cadastro():
     if request.method == 'POST':
+        # Verifica se é o primeiro usuário
         is_first_user = Usuario.query.count() == 0
         
+        # Recupera os dados do formulário
         celular = request.form.get('celular')
         nome = request.form.get('nome')
         email = request.form.get('email')
@@ -186,21 +232,23 @@ def cadastro():
         cidade = request.form.get('cidade')
         estado = request.form.get('estado')
 
+        # Validação dos campos obrigatórios
         if not celular or not senha or not email or not cep or not logradouro or not numero or not bairro or not cidade or not estado:
             flash('Todos os campos obrigatórios devem ser preenchidos', 'erro')
             return redirect(url_for('cadastro'))
 
+        # Verifica se o celular já está cadastrado
         if Usuario.query.filter_by(celular=celular).first():
             flash('Número de celular já cadastrado', 'erro')
             return redirect(url_for('cadastro'))
 
+        # Verifica se o email já está cadastrado
         if Usuario.query.filter_by(email=email).first():
             flash('E-mail já cadastrado', 'erro')
             return redirect(url_for('cadastro'))
 
-
+        # Cria o novo usuário
         novo_usuario = Usuario(
-            
             celular=celular,
             nome=nome,
             email=email,
@@ -210,16 +258,24 @@ def cadastro():
             complemento=complemento,
             bairro=bairro,
             cidade=cidade,
-            estado=estado
+            estado=estado,
+            is_admin=is_first_user  # Define como admin apenas o primeiro usuário
         )
+
+        # Define a senha
         novo_usuario.definir_senha(senha)
+
+        # Salva no banco de dados
         db.session.add(novo_usuario)
         db.session.commit()
 
+        # Mensagem de sucesso
         flash('Cadastro realizado com sucesso!', 'sucesso')
         return redirect(url_for('login'))
 
-    return render_template('cadastro.html')
+    # Passa o número de usuários cadastrados para o template
+    total_usuarios = Usuario.query.count()
+    return render_template('cadastro.html', total_usuarios=total_usuarios)
 
 @app.route('/cadastro_admin', methods=['GET', 'POST'])
 def cadastro_admin():
@@ -265,16 +321,12 @@ def login():
         senha = request.form.get('senha')
         
         usuario = Usuario.query.filter_by(celular=celular).first()
-
         if not usuario or not usuario.verificar_senha(senha):
             flash('Número de celular ou senha incorretos', 'erro')
             return redirect(url_for('login'))
-
         login_user(usuario)
-        return redirect(url_for('index'))
-
+        return redirect(url_for('admin_dashboard'))
     return render_template('login.html')
-
 
 @app.route('/logout')
 @login_required
@@ -662,30 +714,54 @@ def graficos():
 @app.route('/admin/produtos', methods=['GET', 'POST'])
 @login_required
 def admin_produtos():
-    if not current_user.is_admin:  # Verifica se o usuário é administrador
+    if not current_user.is_admin:
         flash('Acesso negado. Você não é um administrador.', 'erro')
         return redirect(url_for('index'))
 
     if request.method == 'POST':
+        # Verifica se um produto existente foi selecionado
+        produto_id = request.form.get('produto_existente')
         nome = request.form.get('nome')
         descricao = request.form.get('descricao')
         preco = float(request.form.get('preco'))
         estoque = int(request.form.get('estoque'))
+        foto = None
 
-        novo_produto = Produto(
-            nome=nome,
-            descricao=descricao,
-            preco=preco,
-            estoque=estoque
-        )
-        db.session.add(novo_produto)
-        db.session.commit()
+        # Upload de foto
+        if 'foto' in request.files:
+            file = request.files['foto']
+            if file and allowed_file(file.filename):
+                filename = secure_filename(file.filename)
+                file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+                foto = f"uploads/{filename}"
 
-        flash('Produto cadastrado com sucesso!', 'sucesso')
+        if produto_id:  # Atualiza um produto existente
+            produto = Produto.query.get_or_404(produto_id)
+            produto.nome = nome or produto.nome
+            produto.descricao = descricao or produto.descricao
+            produto.preco = preco
+            produto.estoque += estoque  # Soma ao estoque existente
+            produto.foto = foto or produto.foto  # Mantém a foto anterior se nenhuma nova for enviada
+            db.session.commit()
+            flash('Estoque atualizado com sucesso!', 'sucesso')
+        else:  # Cadastra um novo produto
+            novo_produto = Produto(
+                nome=nome,
+                descricao=descricao,
+                preco=preco,
+                estoque=estoque,
+                foto=foto
+            )
+            db.session.add(novo_produto)
+            db.session.commit()
+            flash('Produto cadastrado com sucesso!', 'sucesso')
+
         return redirect(url_for('admin_produtos'))
 
+    # Recupera todos os produtos para preencher a lista suspensa
     produtos = Produto.query.all()
     return render_template('admin_produtos.html', produtos=produtos)
+
 
 @app.route('/admin/base_admin')
 @login_required
@@ -694,14 +770,14 @@ def base_admin():
         flash('Acesso negado!', 'erro')
         return redirect(url_for('base_admin'))
 
-@app.route('/admin/usuarios')
+@app.route('/admin_usuarios')
 @login_required
 def admin_usuarios():
     if not current_user.is_admin:
-        flash('Acesso negado!', 'erro')
+        flash('Acesso negado. Você não é um administrador.', 'erro')
         return redirect(url_for('index'))
     
-    usuarios = Usuario.query.all()
+    usuarios = Usuario.query.all()  # Recupera todos os usuários
     return render_template('admin_usuarios.html', usuarios=usuarios)
 
 

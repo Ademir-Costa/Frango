@@ -1,11 +1,23 @@
 from app import db  # Importação absoluta
 
-class Usuario(db.Model):
+from datetime import datetime
+
+class Usuario(db.Model, UserMixin):
     id = db.Column(db.Integer, primary_key=True)
     nome = db.Column(db.String(100), nullable=False)
     email = db.Column(db.String(100), unique=True, nullable=False)
-    senha_hash = db.Column(db.String(200), nullable=False)
-
+    celular = db.Column(db.String(20), unique=True, nullable=False)
+    senha_hash = db.Column(db.String(255), nullable=False)
+    cep = db.Column(db.String(10), nullable=False)
+    logradouro = db.Column(db.String(255), nullable=False)
+    numero = db.Column(db.String(20), nullable=False)
+    complemento = db.Column(db.String(100))
+    bairro = db.Column(db.String(100), nullable=False)
+    cidade = db.Column(db.String(100), nullable=False)
+    estado = db.Column(db.String(2), nullable=False)
+    is_admin = db.Column(db.Boolean, default=False)  # Campo obrigatório
+    data_registro = db.Column(db.DateTime, default=datetime.utcnow)  # Data de registro
+   
     def definir_senha(self, senha):
         self.senha_hash = generate_password_hash(senha)
 
@@ -15,8 +27,11 @@ class Usuario(db.Model):
 class Produto(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     nome = db.Column(db.String(100), nullable=False)
+    descricao = db.Column(db.Text, nullable=True)
     preco = db.Column(db.Float, nullable=False)
     estoque = db.Column(db.Integer, nullable=False)
+    data_atualizacao = db.Column(db.DateTime, nullable=True, default=datetime.utcnow)
+    foto = db.Column(db.String(255), nullable=True)  # Adicione esta linha
 
 class Pedido(db.Model):
     id = db.Column(db.Integer, primary_key=True)

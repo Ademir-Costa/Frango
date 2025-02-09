@@ -1,9 +1,8 @@
 {% extends "base.html" %}
-
+{% block head %}
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  
     <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <!-- Bootstrap Icons -->
@@ -11,53 +10,108 @@
     <!-- Estilo Personalizado -->
     <link rel="stylesheet" href="{{ url_for('static', filename='/styles.css') }}">
 </head>
+{% endblock %}
 {% block content %}
-<div class="card">
-    <div class="card-header bg-primary text-white">
-        <h4>Cadastro de Produtos</h4>
-    </div>
-    <div class="card-body">
-        <form method="POST" class="row g-3">
-            <div class="col-md-6">
-                <label class="form-label">Nome*</label>
-                <input type="text" class="form-control" name="nome" required>
-            </div>
-            <div class="col-md-6">
-                <label class="form-label">Preço*</label>
-                <input type="number" class="form-control" name="preco" step="0.01" required>
-            </div>
-            <div class="col-12">
-                <label class="form-label">Descrição</label>
-                <textarea class="form-control" name="descricao"></textarea>
-            </div>
-            <div class="col-md-4">
-                <label class="form-label">Estoque*</label>
-                <input type="number" class="form-control" name="estoque" required>
-            </div>
-            <div class="col-12">
-                <button type="submit" class="btn btn-primary">Cadastrar</button>
-            </div>
-        </form>
+<div class="container-fluid">
+    <div class="row justify-content-center">
+        <div class="col-md-10 col-lg-8">
+            <div class="card mt-4">
+                <div class="card-header bg-primary text-white">
+                    <h4>Cadastro/Atualização de Produtos</h4>
+                </div>
+                <div class="card-body">
+                    <form method="POST" enctype="multipart/form-data" class="row g-3">
+                        <!-- Seleção de Produto Existente -->
+                        <div class="col-md-6">
+                            <label class="form-label">Produto Existente (Opcional)</label>
+                            <select class="form-select" name="produto_existente">
+                                <option value="">Selecione um produto...</option>
+                                {% for produto in produtos %}
+                                <option value="{{ produto.id }}">{{ produto.nome }} (Estoque: {{ produto.estoque }})</option>
+                                {% endfor %}
+                            </select>
+                        </div>
 
-        <h5 class="mt-5">Produtos Cadastrados</h5>
-        <table class="table table-striped">
-            <thead>
-                <tr>
-                    <th>Nome</th>
-                    <th>Preço</th>
-                    <th>Estoque</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for produto in produtos %}
-                <tr>
-                    <td>{{ produto.nome }}</td>
-                    <td>R$ {{ "%.2f"|format(produto.preco) }}</td>
-                    <td>{{ produto.estoque }}</td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
+                        <!-- Nome do Produto -->
+                        <div class="col-md-6">
+                            <label class="form-label">Nome*</label>
+                            <input type="text" class="form-control" name="nome" required>
+                        </div>
+
+                        <!-- Preço -->
+                        <div class="col-md-6">
+                            <label class="form-label">Preço*</label>
+                            <input type="number" class="form-control" name="preco" step="0.01" required>
+                        </div>
+
+                        <!-- Descrição -->
+                        <div class="col-12">
+                            <label class="form-label">Descrição</label>
+                            <textarea class="form-control" name="descricao"></textarea>
+                        </div>
+
+                        <!-- Estoque -->
+                        <div class="col-md-4">
+                            <label class="form-label">Estoque*</label>
+                            <input type="number" class="form-control" name="estoque" required>
+                        </div>
+
+                        <!-- Foto -->
+                        <div class="col-md-6">
+                            <label class="form-label">Foto</label>
+                            <input type="file" class="form-control" name="foto" accept="image/*">
+                        </div>
+
+                        <!-- Botão de Envio -->
+                        <div class="col-12">
+                            <button type="submit" class="btn btn-primary">Cadastrar/Atualizar</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Tabela de Produtos Cadastrados -->
+            <h5 class="mt-5">Produtos Cadastrados</h5>
+            <div class="table-responsive">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>Foto</th>
+                            <th>Nome</th>
+                            <th>Preço</th>
+                            <th>Estoque</th>
+                            <th>Data de Atualização</th>
+                            <th>Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for produto in produtos %}
+                        <tr>
+                            <td>
+                                {% if produto.foto %}
+                                <img src="{{ url_for('static', filename=produto.foto) }}" alt="{{ produto.nome }}" style="width: 50px; height: 50px; object-fit: cover;">
+                                {% else %}
+                                <span>N/A</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ produto.nome }}</td>
+                            <td>R$ {{ "%.2f"|format(produto.preco) }}</td>
+                            <td>{{ produto.estoque }}</td>
+                            <td>{{ produto.data_atualizacao.strftime('%d/%m/%Y %H:%M') if produto.data_atualizacao else 'N/A' }}</td>
+                            <td>
+                                <!-- Formulário para editar preço e estoque -->
+                                <form method="POST" action="{{ url_for('atualizar_produto', produto_id=produto.id) }}" style="display:inline;">
+                                    <input type="number" name="preco" value="{{ "%.2f"|format(produto.preco) }}" step="0.01" required style="width: 80px;">
+                                    <input type="number" name="estoque" value="{{ produto.estoque }}" required style="width: 60px;">
+                                    <button type="submit" class="btn btn-info btn-sm">Atualizar</button>
+                                </form>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
     </div>
 </div>
 {% endblock %}
