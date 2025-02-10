@@ -32,10 +32,10 @@ nav a:hover {
 main {
     padding: 20px;
     max-width: 600px;
-    margin: 0 auto;
+    margin:  auto;
     background-color: white;
     border-radius: 5px;
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 0 10px rgba(181, 24, 24, 0.1);
 }
 
 form label {
@@ -211,6 +211,58 @@ footer a:hover {
     bottom: 0;
 }
 
+@media (max-width: 768px) {
+    main {
+        padding: 10px;
+    }
+
+    form input,
+    form textarea,
+    form select {
+        width: 100%;
+    }
+
+    .table-responsive {
+        overflow-x: auto;
+    }
+}
+/* Botão de Voltar */
+a[href*="admin_dashboard"] {
+    display: inline-block;
+    margin-top: 20px;
+    padding: 10px 15px;
+    background-color: #007bff;
+    color: white;
+    text-decoration: none;
+    border-radius: 4px;
+    transition: background-color 0.3s ease;
+}
+
+a[href*="admin_dashboard"]:hover {
+    background-color: #0056b3;
+}
+
+/* Mensagens de Flash */
+.flash-message {
+    padding: 10px;
+    margin-bottom: 15px;
+    border-radius: 4px;
+    font-weight: bold;
+}
+
+.flash-message.sucesso {
+    background-color: #d4edda;
+    color: #155724;
+    border: 1px solid #c3e6cb;
+}
+
+.flash-message.erro {
+    background-color: #f8d7da;
+    color: #721c24;
+    border: 1px solid #f5c6cb;
+}
+
+
 /* Responsividade */
 @media (max-width: 768px) {
     .table-responsive {
@@ -375,3 +427,4 @@ table img {
 form[style*="display:inline;"] {
     display: inline-flex; /* Garante que o formulário se comporte como um botão inline */
 }
+

@@ -136,7 +136,7 @@ def index():
 def pedidos():
     # Verifica se o usuário é administrador
     if not current_user.is_admin:
-        flash('Acesso negado. Você não é um administrador.', 'erro')
+       
         return redirect(url_for('index'))
     
     # Buscar apenas os pedidos que não estão entregues ou retirados
@@ -153,7 +153,7 @@ def pedidos():
 @login_required
 def atualizar_produto(produto_id):
     if not current_user.is_admin:  # Verifica se o usuário é administrador
-        flash('Acesso negado. Você não é um administrador.', 'erro')
+        #flash('Acesso negado. Você não é um administrador.', 'erro')
         return redirect(url_for('index'))
 
     produto = Produto.query.get_or_404(produto_id)  # Busca o produto pelo ID
@@ -164,7 +164,7 @@ def atualizar_produto(produto_id):
         produto.estoque = int(request.form.get('estoque'))
         produto.data_atualizacao = datetime.utcnow()  # Adiciona a data de atualização
         db.session.commit()
-        flash('Produto atualizado com sucesso!', 'sucesso')
+        #flash('Produto atualizado com sucesso!', 'sucesso')
     except Exception as e:
         db.session.rollback()
         flash(f'Erro ao atualizar o produto: {str(e)}', 'erro')
@@ -273,7 +273,7 @@ def cadastro():
         db.session.commit()
 
         # Mensagem de sucesso
-        flash('Cadastro realizado com sucesso!', 'sucesso')
+        #flash('Cadastro realizado com sucesso!', 'sucesso')
         return redirect(url_for('login'))
 
     # Passa o número de usuários cadastrados para o template
@@ -284,7 +284,7 @@ def cadastro():
 @login_required
 def editar_usuario(user_id):
     if not current_user.is_admin:
-        flash('Acesso negado. Você não é um administrador.', 'erro')
+       # flash('Acesso negado. Você não é um administrador.', 'erro')
         return redirect(url_for('index'))
 
     usuario = Usuario.query.get_or_404(user_id)
@@ -304,7 +304,7 @@ def editar_usuario(user_id):
 
         # Salva as alterações no banco de dados
         db.session.commit()
-        flash(f'Dados do usuário {usuario.nome} atualizados com sucesso!', 'sucesso')
+        #flash(f'Dados do usuário {usuario.nome} atualizados com sucesso!', 'sucesso')
         return redirect(url_for('admin_usuarios'))
 
     return render_template('editar_usuario.html', usuario=usuario)
@@ -313,7 +313,7 @@ def editar_usuario(user_id):
 @login_required
 def excluir_usuario(user_id):
     if not current_user.is_admin:
-        flash('Acesso negado. Você não é um administrador.', 'erro')
+       # flash('Acesso negado. Você não é um administrador.', 'erro')
         return redirect(url_for('index'))
 
     usuario = Usuario.query.get_or_404(user_id)
@@ -322,7 +322,7 @@ def excluir_usuario(user_id):
     db.session.delete(usuario)
     db.session.commit()
 
-    flash(f'Usuário {usuario.nome} excluído com sucesso!', 'sucesso')
+  #  flash(f'Usuário {usuario.nome} excluído com sucesso!', 'sucesso')
     return redirect(url_for('admin_usuarios'))
 
 @app.route('/cadastro_admin', methods=['GET', 'POST'])
@@ -399,10 +399,10 @@ def recuperar_senha():
             msg.body = f'Para redefinir sua senha, clique no link: {url_for("redefinir_senha", token=token, _external=True)}'
             mail.send(msg)
 
-            flash('Um e-mail com instruções foi enviado para você.', 'sucesso')
+          #  flash('Um e-mail com instruções foi enviado para você.', 'sucesso')
             return redirect(url_for('login'))
 
-        flash('E-mail não encontrado.', 'erro')
+        #flash('E-mail não encontrado.', 'erro')
         return redirect(url_for('recuperar_senha'))
 
     return render_template('recuperar_senha.html')
@@ -471,7 +471,7 @@ def remover_admin(user_id):
 @login_required
 def atualizar_status(pedido_id, status):
     if not current_user.is_admin:
-        flash('Acesso negado!', 'erro')
+       # flash('Acesso negado!', 'erro')
         return redirect(url_for('index'))
     
     pedido = Pedido.query.get(pedido_id)
@@ -495,7 +495,7 @@ def acompanhamento():
         .first()
     )
     if not pedido:
-        flash('Nenhum pedido encontrado.', 'erro')
+      #  flash('Nenhum pedido encontrado.', 'erro')
         return redirect(url_for('index'))
     return render_template('acompanhamento.html', pedido=pedido)
     
@@ -515,7 +515,7 @@ def carrinho():
 
             # Validação inicial
             if not local_retirada or not data_retirada_str:
-                flash('Preencha todos os campos obrigatórios.', 'erro')
+            #    flash('Preencha todos os campos obrigatórios.', 'erro')
                 return redirect(url_for('carrinho'))
 
             data_retirada = datetime.strptime(data_retirada_str, '%Y-%m-%dT%H:%M')
@@ -753,7 +753,7 @@ def obter_entregas_retiradas(pedidos):
 @login_required
 def graficos():
     if not current_user.is_admin:
-        flash('Acesso negado. Você não é um administrador.', 'erro')
+      #  flash('Acesso negado. Você não é um administrador.', 'erro')
         return redirect(url_for('index'))
     return render_template('api_graficos.html')
 
@@ -763,7 +763,7 @@ def graficos():
 @login_required
 def admin_produtos():
     if not current_user.is_admin:
-        flash('Acesso negado. Você não é um administrador.', 'erro')
+    #    flash('Acesso negado. Você não é um administrador.', 'erro')
         return redirect(url_for('index'))
 
     if request.method == 'POST':
@@ -791,7 +791,7 @@ def admin_produtos():
             produto.estoque += estoque  # Soma ao estoque existente
             produto.foto = foto or produto.foto  # Mantém a foto anterior se nenhuma nova for enviada
             db.session.commit()
-            flash('Estoque atualizado com sucesso!', 'sucesso')
+          #  flash('Estoque atualizado com sucesso!', 'sucesso')
         else:  # Cadastra um novo produto
             novo_produto = Produto(
                 nome=nome,
@@ -802,7 +802,7 @@ def admin_produtos():
             )
             db.session.add(novo_produto)
             db.session.commit()
-            flash('Produto cadastrado com sucesso!', 'sucesso')
+         #   flash('Produto cadastrado com sucesso!', 'sucesso')
 
         return redirect(url_for('admin_produtos'))
 
@@ -822,43 +822,123 @@ def base_admin():
 @login_required
 def admin_usuarios():
     if not current_user.is_admin:
-        flash('Acesso negado. Você não é um administrador.', 'erro')
+    #    flash('Acesso negado. Você não é um administrador.', 'erro')
         return redirect(url_for('index'))
     
     usuarios = Usuario.query.all()  # Recupera todos os usuários
     return render_template('admin_usuarios.html', usuarios=usuarios)
 
+@app.route('/admin/detalhes_admin')
+@login_required
+def detalhes_admin():
+    if not current_user.is_admin:
+    #    flash('Acesso negado. Você não é um administrador.', 'erro')
+        return redirect(url_for('index'))
+
+    # Recupera o último pedido do administrador logado
+    ultimo_pedido = (
+        Pedido.query
+        .filter_by(usuario_id=current_user.id)
+        .order_by(Pedido.data_pedido.desc())
+        .first()
+    )
+
+    # Calcula a diferença de dias desde o último pedido
+    if current_user.ultimo_pedido:
+        diferenca = datetime.utcnow() - current_user.ultimo_pedido
+        dias_sem_pedido = diferenca.days
+    else:
+        dias_sem_pedido = None
+
+    # Detalhes do último pedido (se existir)
+    itens_pedido = []
+    forma_entrega = None
+    if ultimo_pedido:
+        itens_pedido = ultimo_pedido.itens  # Itens do último pedido
+        forma_entrega = "Entrega na Residência" if ultimo_pedido.local_retirada == "Entrega na Residencia" else "Retirada"
+
+    # Passa os dados para o template
+    return render_template(
+        'detalhes_admin.html',
+        usuario=current_user,
+        dias_sem_pedido=dias_sem_pedido,
+        ultimo_pedido=ultimo_pedido,
+        itens_pedido=itens_pedido,
+        forma_entrega=forma_entrega
+    )
 
 
 @app.route('/admin/detalhes_usuario/<int:user_id>')
 @login_required
 def detalhes_usuario(user_id):
     if not current_user.is_admin:
-        flash('Acesso negado. Você não é um administrador.', 'erro')
+    #    flash('Acesso negado. Você não é um administrador.', 'erro')
         return redirect(url_for('index'))
-
+    
     # Recupera o usuário pelo ID
     usuario = Usuario.query.get_or_404(user_id)
-
+    
+    # Recupera o último pedido do usuário
+    ultimo_pedido = (
+        Pedido.query
+        .filter_by(usuario_id=usuario.id)
+        .order_by(Pedido.data_pedido.desc())
+        .first()
+    )
+    
     # Calcula a diferença de dias desde o último pedido
     if usuario.ultimo_pedido:
-        diferenca = datetime.utcnow() - usuario.ultimo_pedido
+        diferenca = datetime.utcnow() - usuario.ultimo_pedido 
         dias_sem_pedido = diferenca.days
     else:
         dias_sem_pedido = None
-
+    
+    # Define a forma de entrega (se houver um último pedido)
+    forma_entrega = "Entrega na Residência" if ultimo_pedido and ultimo_pedido.local_retirada == "Entrega na Residencia" else "Retirada"
+    
+    # Recupera os itens do último pedido (se houver)
+    itens_pedido = ultimo_pedido.itens if ultimo_pedido else []
+    
     # Passa os dados para o template
-    return render_template('detalhes_usuario.html',
-                           usuario=usuario,
-                           dias_sem_pedido=dias_sem_pedido)
+    return render_template(
+        'detalhes_usuario.html',
+        usuario=usuario,
+        ultimo_pedido=ultimo_pedido,
+        dias_sem_pedido=dias_sem_pedido,
+        forma_entrega=forma_entrega,
+        itens_pedido=itens_pedido
+    )
 
+@app.route('/admin/usuarios_inativos')
+@login_required
+def usuarios_inativos():
+    if not current_user.is_admin:
+    #    flash('Acesso negado. Você não é um administrador.', 'erro')
+        return redirect(url_for('index'))
+    
+    # Calcula a data limite (30 dias atrás)
+    data_limite = datetime.utcnow() - timedelta(days=15)
+    
+    # Consulta os usuários que não realizaram pedidos nos últimos 30 dias
+    usuarios_inativos = (
+        Usuario.query
+        .outerjoin(Pedido, Usuario.id == Pedido.usuario_id)  # Junção com a tabela de pedidos
+        .filter(
+            (Pedido.data_pedido == None) | (Pedido.data_pedido < data_limite)  # Sem pedidos ou último pedido > 30 dias
+        )
+        .distinct()  # Remove duplicatas
+        .all()
+    )
+    
+    # Passa os dados para o template
+    return render_template('usuarios_inativos.html', usuarios=usuarios_inativos)
 
 # Cria o banco de dados e as tabelas
 with app.app_context():
     db.create_all()
 
 if __name__ == '__main__':
-   #app.run(debug=True)
+  # app.run(debug=True)
     
     port = int(os.environ.get("PORT", 8080))
     app.run(host="0.0.0.0", port=port)

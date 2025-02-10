@@ -58,7 +58,7 @@
                         </li>
                         <li class="nav-item">
                             <a class="nav-link {% if request.endpoint == 'pedidos' %}active{% endif %}" href="{{ url_for('pedidos') }}">
-                                <i class="bi bi-list-check"></i> Pedidos
+                                <i class="bi bi-list-check"></i> Consultar Pedidos
                             </a>
                         </li>
                        
@@ -69,8 +69,8 @@
                     </li>
                     
                     <li class="nav-item">
-                        <a class="nav-link {% if request.endpoint == 'admin_dashboard' %}active{% endif %}" href="{{ url_for('admin_dashboard') }}">
-                            <i class="bi bi-person-plus"></i> Cadastro
+                        <a class="nav-link {% if request.endpoint == 'usuarios_inativos' %}active{% endif %}" href="{{ url_for('usuarios_inativos') }}">
+                            <i class="bi bi-person-plus"></i> Clientes Inativos
                         </a>
                     </li>
                   

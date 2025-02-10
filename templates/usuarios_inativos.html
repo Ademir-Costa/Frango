@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Administração</title>
+    
+</head>
+<style>
+    /* Reset básico */
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+    }
+    
+    body {
+        font-family: Arial, sans-serif;
+        background-color: #f4f4f4;
+        color: #333;
+        line-height: 1.6;
+        padding: 20px;
+    }
+    
+    header {
+        background-color: #007bff;
+        color: white;
+        padding: 15px 0;
+        text-align: center;
+        margin-bottom: 20px;
+    }
+    
+    header h1 {
+        font-size: 1.8rem;
+        margin: 0;
+    }
+    
+    main {
+        max-width: 800px;
+        margin: 0 auto;
+        background-color: white;
+        padding: 20px;
+        border-radius: 8px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+    
+    h1 {
+        font-size: 2rem;
+        color:hsl(210, 11.10%, 96.50%);
+        text-align: center;
+        margin-bottom: 20px;
+    }
+    
+    h2 {
+        font-size: 1.5rem;
+        color: #333;
+        margin-bottom: 15px;
+    }
+    
+    p {
+        font-size: 1rem;
+        margin-bottom: 10px;
+    }
+    
+    strong {
+        color: #007bff;
+    }
+    
+    ul {
+        list-style-type: none;
+        padding: 0;
+    }
+    
+    li {
+        background-color: #f9f9f9;
+        margin-bottom: 10px;
+        padding: 10px;
+        border-radius: 5px;
+        border: 1px solid #ddd;
+    }
+    
+    a {
+        display: inline-block;
+        margin-top: 20px;
+        padding: 10px 15px;
+        background-color: #007bff;
+        color: white;
+        text-decoration: none;
+        border-radius: 5px;
+        transition: background-color 0.3s ease;
+    }
+    
+    a:hover {
+        background-color: #0056b3;
+    }
+    
+    /* Botões */
+    .btn-primary {
+        background-color: #007bff;
+        color: white;
+        border: none;
+        padding: 10px 15px;
+        border-radius: 5px;
+        cursor: pointer;
+        transition: background-color 0.3s ease;
+    }
+    
+    .btn-primary:hover {
+        background-color: #0056b3;
+    }
+    
+    .btn-danger {
+        background-color: #dc3545;
+        color: white;
+        border: none;
+        padding: 10px 15px;
+        border-radius: 5px;
+        cursor: pointer;
+        transition: background-color 0.3s ease;
+    }
+    
+    .btn-danger:hover {
+        background-color: #c82333;
+    }
+    
+    .btn-success {
+        background-color: #28a745;
+        color: white;
+        border: none;
+        padding: 10px 15px;
+        border-radius: 5px;
+        cursor: pointer;
+        transition: background-color 0.3s ease;
+    }
+    
+    .btn-success:hover {
+        background-color: #218838;
+    }
+    
+    /* Tabelas */
+    .table {
+        width: 100%;
+        margin-bottom: 1rem;
+        border-collapse: collapse;
+    }
+    
+    .table th,
+    .table td {
+        padding: 0.75rem;
+        vertical-align: top;
+        border-top: 1px solid #dee2e6;
+    }
+    
+    .table thead th {
+        vertical-align: bottom;
+        border-bottom: 2px solid #dee2e6;
+    }
+    
+    .table-striped tbody tr:nth-of-type(odd) {
+        background-color: rgba(0, 0, 0, 0.05);
+    }
+    
+    /* Responsividade */
+    @media (max-width: 768px) {
+        main {
+            padding: 15px;
+        }
+    
+        h1 {
+            font-size: 1.5rem;
+        }
+    
+        h2 {
+            font-size: 1.2rem;
+        }
+    
+        p {
+            font-size: 0.9rem;
+        }
+    }
+
+</style>
+<body>
+    <header>
+        <h1>Painel de Administração para Clientes Inativos</h1>
+    </header>
+
+{% block content %}
+<h1>Cliente(s) Inativo(s)</h1>
+<p>Lista de usuários que não realizaram pedidos nos últimos 30 dias.</p>
+
+<!-- Tabela de Usuários -->
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th>Nome</th>
+            <th>E-mail</th>
+            <th>Celular</th>
+            <th>Último Pedido</th>
+            <th>Ações</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for usuario in usuarios %}
+        <tr>
+            <td>{{ usuario.nome }}</td>
+            <td>{{ usuario.email }}</td>
+            <td>{{ usuario.celular }}</td>
+            <td>
+                {% if usuario.ultimo_pedido %}
+                    {{ usuario.ultimo_pedido.strftime('%d/%m/%Y %H:%M') }}
+                {% else %}
+                    Nenhum pedido registrado
+                {% endif %}
+            </td>
+            <td>
+                <!-- Botão de Detalhes -->
+                <a href="{{ url_for('detalhes_usuario', user_id=usuario.id) }}" class="btn btn-info btn-sm">Detalhes</a>
+                
+                <!-- Link para WhatsApp -->
+                {% if usuario.celular %}
+                    {% set whatsapp_message = "Olá " ~ usuario.nome ~ ", estamos sentindo sua falta em fazer seu pedido! Seu último pedido foi em " ~ (usuario.ultimo_pedido.strftime('%d/%m/%Y') if usuario.ultimo_pedido else 'não registrado') ~ ". Venha nos visitar novamente!" %}
+                    <a href="https://wa.me/+55{{ usuario.celular|replace('-', '')|replace(' ', '') }}?text={{ whatsapp_message|urlencode }}" target="_blank" class="btn btn-success btn-sm">
+                        Enviar Mensagem
+                    </a>
+                {% else %}
+                    <span class="btn btn-secondary btn-sm disabled">Sem Celular</span>
+                {% endif %}
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+<!-- Botão de Voltar -->
+<a href="{{ url_for('admin_usuarios') }}" class="btn btn-secondary">Voltar</a>
+{% endblock %}

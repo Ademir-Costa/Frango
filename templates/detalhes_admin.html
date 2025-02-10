@@ -1,0 +1,43 @@
+{% block content %}
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Administração</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='/styles.css') }}">
+</head>
+<body>
+    <header>
+        <h1>Painel de Administração</h1>
+    </header>
+<h1>Detalhes Cliente Inativo</h1>
+
+<!-- Informações do Usuário -->
+<h2>Informações do Usuário</h2>
+<p><strong>Nome:</strong> {{ usuario.nome }}</p>
+<p><strong>E-mail:</strong> {{ usuario.email }}</p>
+<p><strong>Celular:</strong> {{ usuario.celular }}</p>
+
+<!-- Último Pedido -->
+<h2>Último Pedido</h2>
+{% if ultimo_pedido %}
+    <p><strong>Data do Último Pedido:</strong> {{ ultimo_pedido.data_pedido.strftime('%d/%m/%Y %H:%M') }}</p>
+    <p><strong>Dias sem Pedido:</strong> {{ dias_sem_pedido }} dia(s)</p>
+    <p><strong>Forma de Entrega:</strong> {{ forma_entrega }}</p>
+
+    <h3>Itens Comprados</h3>
+    <ul>
+        {% for item in itens_pedido %}
+            <li>
+                {{ item.produto.nome }} - Quantidade: {{ item.quantidade }} - Preço Unitário: R$ {{ "%.2f"|format(item.preco_unitario) }}
+            </li>
+        {% endfor %}
+    </ul>
+{% else %}
+    <p>Nenhum pedido encontrado.</p>
+{% endif %}
+
+<!-- Botão de Voltar -->
+<a href="{{ url_for('admin_dashboard') }}">Voltar ao Dashboard</a>
+{% endblock %}
