@@ -91,7 +91,18 @@
                                 </span>
                             </div>
                         </div>
-                    
+                    <!-- Botão de Cancelamento -->
+<div class="card-footer text-end">
+    {% if pedido.status == "Em preparação" %}
+        <form action="{{ url_for('cancelar_pedido', pedido_id=pedido.id) }}" method="POST" style="display:inline;">
+            <button type="submit" class="btn btn-danger" onclick="return confirm('Tem certeza que deseja cancelar este pedido?');">
+                <i class="bi bi-x-circle"></i> Cancelar Pedido
+            </button>
+        </form>
+    {% else %}
+        <span class="text-muted"></span>
+    {% endif %}
+</div>
                     </div>
                 </div>
             </div>

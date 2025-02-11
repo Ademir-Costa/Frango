@@ -143,7 +143,7 @@ def pedidos():
     pedidos = Pedido.query.options(
         db.joinedload(Pedido.usuario),
         db.joinedload(Pedido.itens).joinedload(ItemPedido.produto)
-    ).filter(Pedido.status.notin_(['Entregue', 'Retirado'])) \
+    ).filter(Pedido.status.notin_(['Entregue', 'Retirado','Cancelado'])) \
      .order_by(Pedido.data_pedido.desc()) \
      .all()
     
@@ -642,6 +642,31 @@ def carrinho():
     produtos = Produto.query.filter(Produto.estoque > 0).all()
     min_date = (datetime.now() + timedelta(hours=1)).strftime('%Y-%m-%dT%H:%M')
     return render_template('carrinho.html', produtos=produtos, min_date=min_date)
+
+
+from flask import flash, redirect, url_for
+
+@app.route('/cancelar_pedido/<int:pedido_id>', methods=['POST'])
+@login_required
+def cancelar_pedido(pedido_id):
+    # Buscar o pedido pelo ID e verificar se pertence ao usuário logado
+    pedido = Pedido.query.filter_by(id=pedido_id, usuario_id=current_user.id).first()
+    
+    if not pedido:
+        flash('Pedido não encontrado.', 'erro')
+        return redirect(url_for('index'))
+    
+    # Verificar se o pedido pode ser cancelado (status "Pendente")
+    if pedido.status != "Em preparação":
+        flash('Este pedido não pode ser cancelado porque já está em andamento ou concluído.', 'erro')
+        return redirect(url_for('acompanhamento'))
+    
+    # Atualizar o status do pedido para "Cancelado"
+    pedido.status = "Cancelado"
+    db.session.commit()
+    
+    flash('Pedido cancelado com sucesso.', 'sucesso')
+    return redirect(url_for('acompanhamento'))
 
 # API para gráfico de pedidos
 
