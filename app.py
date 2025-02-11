@@ -16,8 +16,6 @@ from flask_login import LoginManager
 from flask_login import UserMixin
 
 
-
-
 # Carregar variáveis de ambiente
 load_dotenv()
 
@@ -52,10 +50,19 @@ def load_user(user_id):
     return Usuario.query.get(int(user_id))
 
 
+
+import pytz
+
+@app.context_processor
+def inject_datetime():
+    cuiaba_tz = pytz.timezone('America/Cuiaba')
+    return {
+        'datetime': datetime,
+        'timedelta': timedelta,
+        'now_in_cuiaba': lambda: datetime.now(cuiaba_tz)  # Data atual em Cuiabá
+    }
+
 # Modelo de Usuário
-
-
-from datetime import datetime
 
 class Usuario(db.Model, UserMixin):
     id = db.Column(db.Integer, primary_key=True)
@@ -134,17 +141,15 @@ def index():
 @app.route('/admin/pedidos')
 @login_required
 def pedidos():
-    # Verifica se o usuário é administrador
     if not current_user.is_admin:
-       
         return redirect(url_for('index'))
     
-    # Buscar apenas os pedidos que não estão entregues ou retirados
+    # Buscar pedidos e ordenar por data_retirada
     pedidos = Pedido.query.options(
         db.joinedload(Pedido.usuario),
         db.joinedload(Pedido.itens).joinedload(ItemPedido.produto)
-    ).filter(Pedido.status.notin_(['Entregue', 'Retirado','Cancelado'])) \
-     .order_by(Pedido.data_pedido.desc()) \
+    ).filter(Pedido.status.notin_(['Entregue', 'Retirado', 'Cancelado','Recebido'])) \
+     .order_by(Pedido.data_retirada.asc()) \
      .all()
     
     return render_template('pedidos.html', pedidos=pedidos)
@@ -238,25 +243,27 @@ def index2():
 def admin_dashboard():
     # Verifica se o usuário é administrador
     if not current_user.is_admin:
-        flash('Acesso negado. Você não é um administrador.', 'erro')
         return redirect(url_for('index'))
     
-    # Obter estatísticas ou informações relevantes para o dashboard
+    # Buscar apenas os pedidos recentes que não estão cancelados
+    pedidos_recentes = Pedido.query.options(
+        db.joinedload(Pedido.usuario),
+        db.joinedload(Pedido.itens).joinedload(ItemPedido.produto)
+    ).filter(Pedido.status.notin_(['Entregue', 'Retirado','Recebido','Cancelado']))  \
+    .order_by(Pedido.data_pedido.desc()).limit(5000).all()
+    
+   
+    
+    # Outros dados do dashboard (usuários, produtos, etc.)
     total_usuarios = Usuario.query.count()
     total_produtos = Produto.query.count()
     total_pedidos = Pedido.query.count()
     
-    # Filtrar pedidos que não estão entregues ou retirados
-    pedidos_recentes = Pedido.query.filter(Pedido.status.notin_(['Entregue', 'Retirado'])) \
-                                   .order_by(Pedido.data_pedido.desc()) \
-                                   .limit(5000) \
-                                   .all()
-    
     return render_template('admin_dashboard.html', 
-                           total_usuarios=total_usuarios, 
-                           total_produtos=total_produtos, 
-                           total_pedidos=total_pedidos, 
-                           pedidos_recentes=pedidos_recentes)
+                           pedidos_recentes=pedidos_recentes,
+                           total_usuarios=total_usuarios,
+                           total_produtos=total_produtos,
+                           total_pedidos=total_pedidos)
 
 @app.route('/cadastro', methods=['GET', 'POST'])
 def cadastro():

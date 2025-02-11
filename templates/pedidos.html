@@ -26,11 +26,11 @@
 </head>
 
 <div class="container-fluid py-4">
-    <h2 class="mb-4"><i class="bi bi-clipboard-data"></i> Dashboard Administrativa</h2>
+    <h2 class="mb-4"><i class="bi bi-clipboard-data"></i> Painel de Pedidos de CLientes</h2>
     
     <div class="card shadow-lg">
         <div class="card-header bg-primary text-white">
-            <h5 class="mb-0"><i class="bi bi-cart-check"></i> Todos os Pedidos</h5>
+            <h5 class="mb-0"><i class="bi bi-cart-check"></i> Fila de pedidos</h5>
         </div>
         
         <div class="card-body">
@@ -45,6 +45,10 @@
                                     {{ pedido.status }}
                                 </span>
                             </h6>
+                            <!-- Destacar pedidos próximos -->
+                            {% if pedido.data_retirada and pedido.data_retirada <= datetime.now() + timedelta(hours=2) %}
+                                <span class="badge bg-danger">Próximo!</span>
+                            {% endif %}
                         </div>
                         
                         <div class="card-body">
@@ -93,6 +97,7 @@
                    <h5 class="text-muted"> Nenhum pedido encontrado e todos entregues!</h5> 
                 </div>
                 {% endfor %}
+            </div>
             </div>
         </div>
     </div>
