@@ -34,6 +34,11 @@
                             <i class="bi bi-clock-history"></i> Acompanhamento
                         </a>
                     </li>
+                    
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.endpoint == 'todos_pedidos' %}active{% endif %}" href="{{ url_for('todos_pedidos') }}">
+                            <i class="bi bi-list-check"></i> Todos os Pedidos
+                        </a>
 
                     <li>
                     <a class="nav-link {% if request.endpoint == 'admin_dashboard' %}active{% endif %}" href="{{ url_for('admin_dashboard') }}">
@@ -154,7 +159,6 @@
                             </button>
                             <ul class="dropdown-menu">
                                 <li><a class="dropdown-item" href="{{ url_for('atualizar_status', pedido_id=pedido.id, status='Recebido') }}">Recebido</a></li>
-                                <li><a class="dropdown-item" href="{{ url_for('atualizar_status', pedido_id=pedido.id, status='Em preparação') }}">Em preparação</a></li>
                                 <li><a class="dropdown-item" href="{{ url_for('atualizar_status', pedido_id=pedido.id, status='Pronto para retirada') }}">Pronto</a></li>
                                 <li><a class="dropdown-item" href="{{ url_for('atualizar_status', pedido_id=pedido.id, status='Entregue') }}">Entregue</a></li>
                             </ul>

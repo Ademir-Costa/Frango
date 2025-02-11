@@ -1,0 +1,114 @@
+{% extends "base.html" %}
+{% block head_scripts %}
+<script>
+    // Define o tempo em milissegundos (5 minutos = 300.000 ms)
+    const refreshInterval = 5 * 60 * 1000;
+    // Função para recarregar a página
+    function refreshPage() {
+        window.location.reload();
+    }
+    // Configura o temporizador para recarregar a página após o intervalo definido
+    setTimeout(refreshPage, refreshInterval);
+</script>
+{% endblock %}
+{% block content %}
+<div class="container-fluid py-4">
+    <h2 class="mb-4"><i class="bi bi-clipboard-data"></i> Dashboard Administrativa</h2>
+    <div class="card shadow-lg">
+        <div class="card-header bg-primary text-white">
+            <h5 class="mb-0"><i class="bi bi-cart-check"></i> Todos os Pedidos</h5>
+        </div>
+        <div class="card-body">
+            <!-- Filtro de Data Inicial e Final -->
+            <form method="GET" class="mb-4">
+                <div class="row g-3 align-items-center">
+                    <div class="col-auto">
+                        <label for="data_inicial" class="form-label">Data Inicial:</label>
+                        <input type="date" id="data_inicial" name="data_inicial" class="form-control" value="{{ request.args.get('data_inicial', '') | default('', true) }}">
+                    </div>
+                    <div class="col-auto">
+                        <label for="data_final" class="form-label">Data Final:</label>
+                        <input type="date" id="data_final" name="data_final" class="form-control" value="{{ request.args.get('data_final', '') | default('', true) }}">
+                    </div>
+                    <div class="col-auto">
+                        <button type="submit" class="btn btn-primary mt-4"><i class="bi bi-search"></i> Filtrar</button>
+                    </div>
+                </div>
+            </form>
+            <!-- Lista de Pedidos -->
+            <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+                {% if pedidos|length > 0 %}
+                    {% for pedido in pedidos %}
+                    <div class="col">
+                        <div class="card h-100 border-info">
+                            <div class="card-header bg-light">
+                                <h6 class="mb-0">
+                                    Pedido #{{ pedido.id }}
+                                    <span class="badge bg-{{ {
+                                        'Entregue': 'success',
+                                        'Pronto para retirada': 'info',
+                                        'Em preparo': 'warning',
+                                        'Cancelado': 'danger'
+                                    }.get(pedido.status, 'secondary') }} float-end">
+                                        {{ pedido.status }}
+                                    </span>
+                                </h6>
+                            </div>
+                            <div class="card-body">
+                                <!-- Dados do Cliente -->
+                                <div class="mb-3">
+                                    <h6><i class="bi bi-person"></i> Cliente:</h6>
+                                    <ul class="list-unstyled">
+                                        <li>Nome: {{ pedido.usuario.nome }}</li>
+                                        <li>Contato: {{ pedido.usuario.celular }}</li>
+                                    </ul>
+                                </div>
+                                <!-- Detalhes do Pedido -->
+                                <div class="mb-3 p-3 bg-secondary text-white rounded">
+                                    <h6><i class="bi bi-receipt"></i> Detalhes:</h6>
+                                    <ul class="list-unstyled">
+                                        <li>Data Pedido: {{ pedido.data_pedido.strftime('%d/%m/%Y %H:%M') if pedido.data_pedido else 'N/A' }}</li>
+                                        <li>Retirada: {{ pedido.local_retirada }}</li>
+                                        <li>Data Retirada: {{ pedido.data_retirada.strftime('%d/%m/%Y %H:%M') if pedido.data_retirada else 'N/A' }}</li>
+                                    </ul>
+                                </div>
+                                <!-- Itens do Pedido -->
+                                <div class="mb-3">
+                                    <h6><i class="bi bi-list-ul"></i> Itens:</h6>
+                                    <ul class="list-group list-group-flush">
+                                        {% for item in pedido.itens %}
+                                        <li class="list-group-item d-flex justify-content-between">
+                                            <span>{{ item.produto.nome }} (x{{ item.quantidade }})</span>
+                                            <span>R$ {{ "%.2f"|format(item.preco_unitario * item.quantidade) }}</span>
+                                        </li>
+                                        {% endfor %}
+                                    </ul>
+                                </div>
+                                <!-- Total -->
+                                <div class="alert alert-success mb-0">
+                                    <div class="d-flex justify-content-between">
+                                        <span>Total:</span>
+                                        <strong>R$ {{ "%.2f"|format(pedido.total) }}</strong>
+                                    </div>
+                                    <small class="text-muted">(Taxa: R$ {{ "%.2f"|format(pedido.taxa_entrega) }})</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                <div class="col-12 text-center py-5">
+                    <h5 class="text-muted">
+                        {% if request.args.get('data_inicial') or request.args.get('data_final') %}
+                            Nenhum pedido encontrado para o período selecionado.
+                        {% else %}
+                            Nenhum pedido cadastrado.
+                        {% endif %}
+                    </h5>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

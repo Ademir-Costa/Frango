@@ -149,6 +149,48 @@ def pedidos():
     
     return render_template('pedidos.html', pedidos=pedidos)
 
+
+
+@app.route('/admin/todos_pedidos', methods=['GET'])
+@login_required
+def todos_pedidos():
+    # Verifica se o usuário é administrador
+    if not current_user.is_admin:
+        return redirect(url_for('index'))
+    
+    # Obter parâmetros de filtro de data da URL
+    data_inicial = request.args.get('data_inicial')
+    data_final = request.args.get('data_final')
+
+    # Construir a consulta base
+    query = Pedido.query.options(
+        db.joinedload(Pedido.usuario),
+        db.joinedload(Pedido.itens).joinedload(ItemPedido.produto)
+    ).filter(Pedido.status.notin_(['']))\
+      
+
+    # Aplicar filtro de datas, se fornecido
+    if data_inicial and data_final:
+        try:
+            # Converter as strings de data para objetos datetime
+            data_inicial = datetime.strptime(data_inicial, '%Y-%m-%d')
+            data_final = datetime.strptime(data_final, '%Y-%m-%d')
+
+            # Validar que a data inicial não é maior que a data final
+            if data_inicial > data_final:
+                flash("A data inicial não pode ser maior que a data final.", "danger")
+                return redirect(url_for('todos_pedidos'))
+
+            # Filtrar pedidos dentro do intervalo de datas
+            query = query.filter(Pedido.data_pedido.between(data_inicial, data_final))
+        except ValueError:
+            flash("Formato de data inválido. Use YYYY-MM-DD.", "danger")
+            return redirect(url_for('todos_pedidos'))
+
+    # Ordenar por data de pedido (mais recente primeiro)
+    pedidos = query.order_by(Pedido.data_pedido.desc()).all()
+
+    return render_template('todos_pedidos.html', pedidos=pedidos)
 @app.route('/admin/produtos/atualizar/<int:produto_id>', methods=['POST'])
 @login_required
 def atualizar_produto(produto_id):
@@ -938,8 +980,8 @@ with app.app_context():
     db.create_all()
 
 if __name__ == '__main__':
-  # app.run(debug=True)
+   app.run(debug=True)
     
-    port = int(os.environ.get("PORT", 8080))
-    app.run(host="0.0.0.0", port=port)
+    #port = int(os.environ.get("PORT", 8080))
+    #app.run(host="0.0.0.0", port=port)
     
