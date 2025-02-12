@@ -89,6 +89,16 @@ class Usuario(db.Model, UserMixin):
     def verificar_senha(self, senha):
         return check_password_hash(self.senha_hash, senha)
     
+    
+@property
+def taxa_entrega(self):
+        return 10.00 if self.local_retirada == "Entregar no Endereço" else 0.00
+
+@property
+def total(self):
+        subtotal = sum(item.quantidade * item.preco_unitario for item in self.itens)
+        return subtotal + self.taxa_entrega
+    
 class Pedido(db.Model):
     __tablename__ = 'pedido'  # Nome explícito da tabela
     id = db.Column(db.Integer, primary_key=True)
@@ -99,6 +109,8 @@ class Pedido(db.Model):
     total = db.Column(db.Float, nullable=False)
     data_retirada = db.Column(db.DateTime, nullable=False)
     status = db.Column(db.String(20), default='Recebido')
+    
+    
     
     # Relacionamento com Usuário
     usuario = db.relationship('Usuario', backref='pedidos')
@@ -1012,8 +1024,8 @@ with app.app_context():
     db.create_all()
 
 if __name__ == '__main__':
-   app.run(debug=True)
+   #app.run(debug=True)
     
-    #port = int(os.environ.get("PORT", 8080))
-    #app.run(host="0.0.0.0", port=port)
+    port = int(os.environ.get("PORT", 8080))
+    app.run(host="0.0.0.0", port=port)
     

@@ -428,3 +428,9 @@ form[style*="display:inline;"] {
     display: inline-flex; /* Garante que o formulário se comporte como um botão inline */
 }
 
+/* styles.css */
+.text-inactive {
+    color: red;
+    font-weight: bold;
+}
+
