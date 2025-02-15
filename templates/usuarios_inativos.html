@@ -216,7 +216,7 @@
             </td>
             <td>
                 <!-- Botão de Detalhes -->
-                <a href="{{ url_for('detalhes_usuario', user_id=usuario.id) }}" class="btn btn-info btn-sm">Detalhes</a>
+                <a href="{{ url_for('admin_usuarios', user_id=usuario.id) }}" class="btn btn-info btn-sm">Detalhes</a>
                 
                 <!-- Link para WhatsApp -->
                 {% if usuario.celular %}
