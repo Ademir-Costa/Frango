@@ -22,6 +22,7 @@ load_dotenv()
 app = Flask(__name__)
 
 # Configurações do Flask
+
 app.config['SECRET_KEY'] = os.getenv('SECRET_KEY')
 app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URL')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
@@ -33,6 +34,7 @@ app.config['MAIL_USE_TLS'] = True
 app.config['MAIL_USERNAME'] = os.getenv('MAIL_USERNAME')
 app.config['MAIL_PASSWORD'] = os.getenv('MAIL_PASSWORD')
 app.config['MAIL_DEFAULT_SENDER'] = os.getenv('MAIL_USERNAME')
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///frangos_assados.db'
 
 db = SQLAlchemy(app)
 mail = Mail(app)
