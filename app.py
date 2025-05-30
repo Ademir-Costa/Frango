@@ -25,8 +25,9 @@ app = Flask(__name__)
 
 app.config['SECRET_KEY'] = os.getenv('SECRET_KEY')
 app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URL')
+# Configuração do banco de dados - usa DATABASE_URL se existir, senão usa SQLite local
+#app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URL', 'sqlite:///frangos_assados.db')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///frangos_assados.db'
 
 # Configurações do Flask-Mail
 app.config['MAIL_SERVER'] = 'smtp.gmail.com'
