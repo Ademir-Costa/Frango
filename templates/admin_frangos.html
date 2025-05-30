@@ -1,0 +1,157 @@
+{% extends 'base_admin.html' %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2>Frangolândia do Salim</h2>
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5>Frangolândia do Salim</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6>Juicio</h6>
+                            <ul class="list-group">
+                                <li class="list-group-item">Acompanhamento</li>
+                                <li class="list-group-item">Admin Dashboard</li>
+                                <li class="list-group-item">Produtos</li>
+                                <li class="list-group-item">Usuários</li>
+                                <li class="list-group-item">Carrinho</li>
+                                <li class="list-group-item">Consultar Pedidos</li>
+                                <li class="list-group-item">Relatórios de Pedidos</li>
+                                <li class="list-group-item">Cadastro</li>
+                                <li class="list-group-item">Clientes Íntimos</li>
+                            </ul>
+                        </div>
+                        <div class="col-md-6">
+                            <h6>Frangos Assados vs Vendidos</h6>
+                            <ul class="list-group">
+                                <li class="list-group-item">Frangos Assados</li>
+                                <li class="list-group-item">Frangos Vendidos</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5>Gráfico de Frangos</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="frangosChart" height="200"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header">
+            <h5>Adicionar/Atualizar Dados</h5>
+        </div>
+        <div class="card-body">
+            <form method="POST">
+                <div class="row">
+                    <div class="col-md-3">
+                        <div class="form-group">
+                            <label for="data">Data</label>
+                            <input type="date" class="form-control" id="data" name="data" required>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="form-group">
+                            <label for="frangos_assados">Frangos Assados</label>
+                            <input type="number" class="form-control" id="frangos_assados" name="frangos_assados" required>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="form-group">
+                            <label for="frangos_vendidos">Frangos Vendidos</label>
+                            <input type="number" class="form-control" id="frangos_vendidos" name="frangos_vendidos" required>
+                        </div>
+                    </div>
+                    <div class="col-md-3 d-flex align-items-end">
+                        <button type="submit" class="btn btn-primary">Salvar</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="card mt-4">
+        <div class="card-header">
+            <h5>Tabela dos Últimos Dias</h5>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>Data</th>
+                            <th>Frangos Assados</th>
+                            <th>Frangos Vendidos</th>
+                            <th>Média Móvel</th>
+                            <th>Sobra</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for registro in registros %}
+                        <tr>
+                            <td>{{ registro.data.strftime('%d-%m-%Y') }}</td>
+                            <td>{{ registro.frangos_assados }}</td>
+                            <td>{{ registro.frangos_vendidos }}</td>
+                            <td>{{ "%.2f"|format(registro.media_movel) if registro.media_movel else '-' }}</td>
+                            <td>{{ registro.sobra }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    fetch('/admin/api/frangos')
+        .then(response => response.json())
+        .then(data => {
+            const ctx = document.getElementById('frangosChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: data.datas,
+                    datasets: [
+                        {
+                            label: 'Frangos Assados',
+                            data: data.assados,
+                            backgroundColor: 'rgba(54, 162, 235, 0.5)',
+                            borderColor: 'rgba(54, 162, 235, 1)',
+                            borderWidth: 1
+                        },
+                        {
+                            label: 'Frangos Vendidos',
+                            data: data.vendidos,
+                            backgroundColor: 'rgba(255, 99, 132, 0.5)',
+                            borderColor: 'rgba(255, 99, 132, 1)',
+                            borderWidth: 1
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+        });
+});
+</script>
+{% endblock %}

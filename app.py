@@ -13,7 +13,7 @@ from flask_sqlalchemy import SQLAlchemy
 from flask import request, jsonify
 from sqlalchemy import func
 from flask_login import LoginManager
-from flask_login import UserMixin
+from flask_login import UserMixinpip
 
 
 # Carregar variáveis de ambiente
